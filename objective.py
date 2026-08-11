@@ -4,6 +4,7 @@ import torch
 from scipy.stats import norm, multivariate_normal
 from tc_python import *
 from scipy.stats import t, multivariate_t
+from sklearn.neighbors import KernelDensity
 from pymatgen.core import Composition
 
 from materialsframework.analysis import CubicElasticConstantsAnalyzer
@@ -19,35 +20,47 @@ from config import num_obj
 
 def objective(x):
     obj1 = obj2 = obj3 = obj4 = obj5 = float("nan")
-
+    
     try:
         # --- Objective 1: Printability ---
-        # [Full Thermo-Calc-based meltpool calculation block...]
-
-        power_values = np.linspace(100, 400, 6)          # W
-        speed_values = np.linspace(50, 1000, 6)        # mm/s
-
-        # Initialize result table
-        grid_data = [{"Power (W)": p, "Speed (mm/s)": s} for p in power_values for s in speed_values]
+    
+        # 1. Set up the power-speed grid
+        power_values = np.linspace(100, 400, 3)      # W
+        speed_values = np.linspace(50, 1000, 4)      # mm/s
+    
+        grid_data = [
+            {"Power (W)": p, "Speed (mm/s)": s}
+            for p in power_values for s in speed_values
+        ]
+    
         df = pd.DataFrame(grid_data)
-
-        # Add columns for meltpool geometry (microns)
-        df["Width (um)"] = np.nan
-        df["Length (um)"] = np.nan
-        df["Depth (um)"] = np.nan
-
-        # Thermo-Calc setup
+        df[["Width (um)", "Length (um)", "Depth (um)"]] = np.nan
+    
+        # 2. Thermo-Calc session
         with TCPython(logging_policy=LoggingPolicy.SCREEN) as session:
-            composition = {"Mo": x[:, 0], "Nb": x[:, 1], "Ta": x[:, 2], "W": x[:, 3], "Co": x[:, 4]}
+    
+            composition = {
+                "Mo": x[:, 0].item(),
+                "Nb": x[:, 1].item(),
+                "Ta": x[:, 2].item(),
+                "W": x[:, 3].item(),
+                "Co": x[:, 4].item()
+            }
+    
             dependent_element = "Hf"
             database = "TCHEA7"
-
+    
+            # Build system and material properties
             elements = list(composition.keys())
-            system = session.select_database_and_elements(database, [dependent_element] + elements).get_system()
-
-            scheil_calculator = (
+    
+            system = session.select_database_and_elements(
+                database,
+                [dependent_element] + elements
+            ).get_system()
+    
+            scheil_calc = (
                 system.with_scheil_calculation()
-                .set_start_temperature(5000.0)
+                .set_start_temperature(4000.0)
                 .set_composition_unit(CompositionUnit.MOLE_FRACTION)
                 .with_options(
                     ScheilOptions()
@@ -56,100 +69,150 @@ def objective(x):
                     .enable_evaporation_property_calculation()
                 )
             )
-
-            for element in composition:
-                scheil_calculator = scheil_calculator.set_composition(element, composition[element].item())
-
-            scheil_result = scheil_calculator.calculate()
-            mp = MaterialProperties.from_scheil_result(scheil_result)
-
+    
+            for el, frac in composition.items():
+                scheil_calc = scheil_calc.set_composition(el, frac)
+    
+            mp = MaterialProperties.from_scheil_result(
+                scheil_calc.calculate()
+            )
+    
+            # Set up AM calculation
             heat_source = (
                 HeatSource.gaussian_with_constant_absorptivity()
                 .set_absorptivity(60.0)
                 .set_beam_radius(40.0e-6)
             )
-
+    
             am_calc = (
                 session.with_additive_manufacturing()
                 .with_steady_state_calculation()
                 .with_mesh(Mesh().coarse())
                 .with_material_properties(mp)
-                .with_numerical_options(NumericalOptions().set_number_of_cores(10))
+                .with_numerical_options(
+                    NumericalOptions().set_number_of_cores(10)
+                )
                 .disable_fluid_flow_marangoni()
                 .set_layer_thickness(30.0e-6)
                 .with_heat_source(heat_source)
             )
-
-            # Loop through grid
+    
+            # 3. Loop over power-speed grid
             for i, row in df.iterrows():
+    
                 p = row["Power (W)"]
                 s = row["Speed (mm/s)"]
-                print(f"Running: Power = {p} W, Speed = {s} mm/s")
-
+    
+                print(
+                    f"Running: Power = {p} W, "
+                    f"Speed = {s} mm/s"
+                )
+    
                 try:
                     heat_source.set_power(p)
-                    heat_source.set_scanning_speed(s / 1000.0)  # mm/s → m/s
-
+    
+                    heat_source.set_scanning_speed(
+                        s / 1000.0
+                    )  # mm/s -> m/s
+    
                     result = am_calc.calculate()
-
-                    # Store results in microns
-                    df.at[i, "Width (um)"] = result.get_meltpool_width() * 1e6
-                    df.at[i, "Length (um)"] = result.get_meltpool_length() * 1e6
-                    df.at[i, "Depth (um)"] = result.get_meltpool_depth() * 1e6
-
+    
+                    df.at[i, "Width (um)"] = (
+                        result.get_meltpool_width() * 1e6
+                    )
+    
+                    df.at[i, "Length (um)"] = (
+                        result.get_meltpool_length() * 1e6
+                    )
+    
+                    df.at[i, "Depth (um)"] = (
+                        result.get_meltpool_depth() * 1e6
+                    )
+    
                 except Exception as e:
-                    print(f"⚠️ Simulation failed at P={p} W, V={s} mm/s: {e}")
-
-            # Drop any rows with missing values (failed simulations)
-            df_clean = df.dropna()
-
-            # Extract variables
-            width = df_clean["Width (um)"].values
-            length = df_clean["Length (um)"].values
-            depth = df_clean["Depth (um)"].values
-
-            # Define random variables
-            RV1 = 3 * width - length
-            RV2 = 2 * width - 3 * depth
-            RV3 = depth - 30
-
-            # Compute statistics
-            means = [np.mean(RV1), np.mean(RV2), np.mean(RV3)]
-            stds = [np.std(RV1), np.std(RV2), np.std(RV3)]
-            cov_matrix = np.cov([RV1, RV2, RV3])
-
-
-            # Individual (marginal) probabilities
-            prob_rv1 = norm.cdf(0, loc=means[0], scale=stds[0])
-            prob_rv2 = norm.cdf(0, loc=means[1], scale=stds[1])
-            prob_rv3 = norm.cdf(0, loc=means[2], scale=stds[2])
-
-            # Bivariate combinations
-            rv12 = multivariate_normal(mean=[means[0], means[1]], cov=cov_matrix[:2, :2])
-            prob_12 = rv12.cdf([0, 0])
-
-            rv23 = multivariate_normal(mean=[means[1], means[2]], cov=cov_matrix[1:3, 1:3])
-            prob_23 = rv23.cdf([0, 0])
-
-            rv13 = multivariate_normal(mean=[means[0], means[2]], cov=cov_matrix[[0, 2]][:, [0, 2]])
-            prob_13 = rv13.cdf([0, 0])
-
-            # Multivariate Normal CDFs
-            rv_3d = multivariate_normal(mean=means, cov=cov_matrix)
-            prob_3d = rv_3d.cdf([0, 0, 0])
-
-            printability = max(0, 1 - (prob_rv1+prob_rv2+prob_rv3-prob_12-prob_23-prob_13+prob_3d))
-
+                    print(
+                        f"Simulation failed at "
+                        f"P={p} W, V={s} mm/s: {e}"
+                    )
+    
+        # 4. Clean results
+        df_clean = df.dropna(
+            subset=[
+                "Width (um)",
+                "Length (um)",
+                "Depth (um)"
+            ]
+        )
+    
+        coords = df_clean[
+            [
+                "Length (um)",
+                "Width (um)",
+                "Depth (um)"
+            ]
+        ].values
+    
+        # 5. KDE sampling
+        kde = KernelDensity(
+            kernel="gaussian",
+            bandwidth=2.0
+        )
+    
+        kde.fit(coords)
+    
+        samples = kde.sample(
+            n_samples=50000,
+            random_state=0
+        )
+    
+        # 6. Defect criteria
+        L = samples[:, 0]
+        W = samples[:, 1]
+        D = samples[:, 2]
+    
+        A = (3 * W - L) <= 0
+        B = (2 * W - 3 * D) <= 0
+        C = D <= 30
+    
+        # 7. Inclusion-exclusion calculation
+        p_A = A.mean()
+        p_B = B.mean()
+        p_C = C.mean()
+    
+        p_AB = np.logical_and(A, B).mean()
+        p_BC = np.logical_and(B, C).mean()
+        p_CA = np.logical_and(C, A).mean()
+    
+        p_ABC = np.logical_and.reduce(
+            [A, B, C]
+        ).mean()
+    
+        p_union = (
+            p_A
+            + p_B
+            + p_C
+            - p_AB
+            - p_BC
+            - p_CA
+            + p_ABC
+        )
+    
+        printability = 1.0 - p_union
+    
         obj1 = printability
-
-        # Save df_clean for printability
-        comp_id = "-".join(f"{v.item():.2f}" for v in x[0])
-        filename = f"printability_{comp_id}.csv"
-        df_clean.to_csv(filename, index=False)
-
+    
+        # 8. Save melt-pool results
+        comp_id = "-".join(
+            f"{v.item():.2f}"
+            for v in x[0]
+        )
+    
     except Exception as e:
-        print(f"Printability calc failed: {e}")
-        return torch.full((1, num_obj), float("nan"), dtype=torch.double)
+        return torch.full(
+            (1, num_obj),
+            float("nan"),
+            dtype=torch.double
+        )
 
     try:
         # --- Objective 2: Yield Strength ---
