@@ -3,6 +3,13 @@ import pandas as pd
 import torch
 from scipy.stats import norm, multivariate_normal
 from tc_python import *
+from scipy.stats import t, multivariate_t
+from pymatgen.core import Composition
+
+from materialsframework.analysis import CubicElasticConstantsAnalyzer
+from materialsframework.transformations import SqsgenTransformation
+warnings.simplefilter("ignore")
+
 
 from config import num_obj
 
