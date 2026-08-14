@@ -80,7 +80,7 @@ def run_optimization(num_queries, init_points):
         train_y = torch.cat([train_y, next_y], dim=0)
         pareto_x = train_x[is_non_dominated(train_y)]
         pareto_y = train_y[is_non_dominated(train_y)]
-        hv = Hypervolume(ref_point).compute(pareto_y)
+        hv = 100 * Hypervolume(ref_point).compute(pareto_y)
         hypervolumes.append(hv)
         pbar.update(1)
 
