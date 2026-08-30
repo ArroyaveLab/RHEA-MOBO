@@ -27,7 +27,7 @@ def run_optimization(num_queries, init_points):
         yi = objective(train_x[i].unsqueeze(0))
         train_y_list.append(yi)
     train_y = torch.cat(train_y_list, dim=0)
-    ref_point = torch.tensor([0, 20, -12, -3, 10], dtype=torch.double)
+    ref_point = torch.tensor([0, 15, -3.5, -3.5, 15], dtype=torch.double)
     hypervolumes = []
 
     pbar = tqdm(total=num_queries, desc="Cost-aware EHVI Optimization")
