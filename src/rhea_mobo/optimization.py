@@ -1,27 +1,53 @@
+"""Main cost-aware multi-objective Bayesian optimization loop."""
+
 import torch
-from tqdm import tqdm
-from tc_python import *
-from botorch.utils.multi_objective.pareto import is_non_dominated
 from botorch.utils.multi_objective.hypervolume import Hypervolume
+from botorch.utils.multi_objective.pareto import is_non_dominated
+from materialsframework.analysis import CubicElasticConstantsAnalyzer
+from materialsframework.transformations import SqsgenTransformation
+from pymatgen.core import Composition
+from tqdm import tqdm
 
-from config import discrete_choices, num_restart, raw_samples
-from constraints import inequality_constraints
-from cost import CostAwareEHVI, cost_model
-from feasible_grid import xs_feasible
-from gp_utils import build_model, get_acquisition
-from local_search import stochastic_local_search
-from objective import objective
+from .config import discrete_choices, num_restart, raw_samples
+from .constraints import inequality_constraints
+from .cost import CostAwareEHVI, cost_model
+from .feasible_grid import xs_feasible
+from .gp_utils import build_model, get_acquisition
+from .local_search import stochastic_local_search
+from .objective import objective
 
-# --------------------
-# Main BO Loop with Progress Bar
-# --------------------
-def run_optimization(num_queries, init_points):
-    # ----- Linspace initial sampling -----
+sqs_generator = SqsgenTransformation()
+elastic_analyzer = CubicElasticConstantsAnalyzer()
+
+
+def run_optimization(
+    num_queries: int, init_points: int
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Run cost-aware EHVI Bayesian optimization over the feasible composition grid.
+
+    Seeds training data from an evenly spaced subset of the feasible grid, then
+    iteratively fits a GP per objective, proposes a candidate via cost-weighted
+    EHVI local search, rejects it if it fails a predicted-ductility check or
+    yields a NaN objective, and otherwise adds it to the training set.
+
+    Args:
+        num_queries: Number of accepted candidates to collect before stopping.
+        init_points: Number of initial design points sampled from the feasible
+            grid before the optimization loop begins.
+
+    Returns:
+        A tuple ``(hypervolumes, train_x, train_y, pareto_x, pareto_y)``: the
+        running hypervolume after each accepted candidate, the full training
+        inputs and objective values, and the inputs/objectives on the final
+        Pareto front.
+
+    Raises:
+        ValueError: If `init_points` exceeds the number of feasible grid points.
+    """
     if init_points > len(xs_feasible):
         raise ValueError("init_points is larger than the number of available feasible points.")
     indices = torch.linspace(0, len(xs_feasible) - 1, init_points).long()
     train_x = xs_feasible[indices]
-    # Evaluate objectives sequentially for each initial sample
     train_y_list = []
     for i in range(init_points):
         yi = objective(train_x[i].unsqueeze(0))
@@ -52,28 +78,26 @@ def run_optimization(num_queries, init_points):
         )
 
         if candidate is None:
-            print(f"[Iteration {pbar.n+1}] Warning: No valid candidate found. Retrying...")
+            print(f"[Iteration {pbar.n + 1}] Warning: No valid candidate found. Retrying...")
             continue
 
         # === Apply Ductility constraint ===
         x_new = candidate[:, :6].numpy()
         alloy_new = Composition(f"Mo{x_new[:, 0]}Nb{x_new[:, 1]}Ta{x_new[:, 2]}W{x_new[:, 3]}Co{x_new[:, 4]}Hf{x_new[:, 5]}")
-        # Generate a supercell with SQS
         sqs_res = sqs_generator.generate(composition=alloy_new, crystal_structure="bcc", supercell_size=(10, 10, 10))
         bcc_MoNbTaWCoHf = sqs_res["structure"]
-        # Calculate the elastic constants
         elas_res = elastic_analyzer.calculate(bcc_MoNbTaWCoHf)
-        pugh_ratio = elas_res['pugh_ratio']
-        predicted_D_new = 1/pugh_ratio
+        pugh_ratio = elas_res["pugh_ratio"]
+        predicted_D_new = 1 / pugh_ratio
 
         if predicted_D_new <= 2.5:
-            print(f"[Iteration {pbar.n+1}] Candidate rejected (predicted D={predicted_D_new:.2f} ≤ 2.5)")
+            print(f"[Iteration {pbar.n + 1}] Candidate rejected (predicted D={predicted_D_new:.2f} ≤ 2.5)")
             continue
 
         next_y = objective(candidate)
 
         if torch.isnan(next_y).any():
-            print(f"[Iteration {pbar.n+1}] Candidate skipped due to NaN in objective.")
+            print(f"[Iteration {pbar.n + 1}] Candidate skipped due to NaN in objective.")
             continue
 
         train_x = torch.cat([train_x, candidate], dim=0)
