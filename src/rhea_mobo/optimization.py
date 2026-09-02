@@ -4,7 +4,7 @@ import torch
 from botorch.utils.multi_objective.hypervolume import Hypervolume
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from materialsframework.analysis import CubicElasticConstantsAnalyzer
-from materialsframework.transformations import SqsgenTransformation
+from materialsframework.tools import SqsGenerator
 from pymatgen.core import Composition
 from tqdm import tqdm
 
@@ -16,7 +16,7 @@ from .gp_utils import build_model, get_acquisition
 from .local_search import stochastic_local_search
 from .objective import objective
 
-sqs_generator = SqsgenTransformation()
+sqs_generator = SqsGenerator()
 elastic_analyzer = CubicElasticConstantsAnalyzer()
 
 

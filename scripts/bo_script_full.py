@@ -22,7 +22,7 @@ from botorch.utils.multi_objective.hypervolume import Hypervolume
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from materialsframework.analysis import CubicElasticConstantsAnalyzer
-from materialsframework.transformations import SqsgenTransformation
+from materialsframework.tools import SqsGenerator
 from pymatgen.core import Composition
 from sklearn.neighbors import KernelDensity
 from tc_python import *
@@ -284,7 +284,7 @@ def objective(x: torch.Tensor) -> torch.Tensor:
 
     try:
         # --- Objective 5: Young's Modulus ---
-        sqs_generator = SqsgenTransformation()
+        sqs_generator = SqsGenerator()
         elastic_analyzer = CubicElasticConstantsAnalyzer()
 
         alloy = Composition(f"Mo{x[:, 0]}Nb{x[:, 1]}Ta{x[:, 2]}W{x[:, 3]}Co{x[:, 4]}Hf{x[:, 5]}")
@@ -425,7 +425,7 @@ mask_positive = (xs > 0).all(dim=1)
 mask_total = mask_sum & mask_equal & mask_positive
 xs_feasible = xs[mask_total]
 
-sqs_generator = SqsgenTransformation()
+sqs_generator = SqsGenerator()
 elastic_analyzer = CubicElasticConstantsAnalyzer()
 
 
