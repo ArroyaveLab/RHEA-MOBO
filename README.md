@@ -44,26 +44,6 @@ pip install git+https://github.com/ArroyaveLab/RHEA-MOBO.git
 
 ---
 
-## Usage
-
-Run the full optimization loop:
-
-```sh
-uv run rhea-mobo
-# or
-uv run python -m rhea_mobo.main
-```
-
-Run the standalone monolithic reference script:
-
-```sh
-uv run python scripts/bo_script_full.py
-```
-
-Run the post-processing/correlation analysis (requires `data/predictions.csv`):
-
-```sh
-uv run python scripts/predicted_correlation.py
 ```
 
 ---
