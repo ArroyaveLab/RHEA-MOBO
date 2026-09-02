@@ -8,6 +8,8 @@
 [![Tests](https://github.com/ArroyaveLab/RHEA-MOBO/actions/workflows/tests.yml/badge.svg)](https://github.com/ArroyaveLab/RHEA-MOBO/actions/workflows/tests.yml)
 [![Lint](https://github.com/ArroyaveLab/RHEA-MOBO/actions/workflows/lint.yml/badge.svg)](https://github.com/ArroyaveLab/RHEA-MOBO/actions/workflows/lint.yml)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22258223.svg)](https://doi.org/10.5281/zenodo.22258223)
+
 `rhea-mobo` is a cost-aware multi-objective Bayesian optimization (MOBO) framework for composition design of refractory high-entropy alloys (RHEAs) in the six-component Mo-Nb-Ta-W-Co-Hf system. It combines Gaussian-process surrogate models, Expected Hypervolume Improvement (EHVI), discrete composition constraints, material-cost-aware acquisition, and physics-based objectives computed with Thermo-Calc/TC-Python and [MaterialsFramework](https://github.com/dogusariturk/MaterialsFramework).
 
 </div>
@@ -44,10 +46,27 @@ pip install git+https://github.com/ArroyaveLab/RHEA-MOBO.git
 
 ---
 
-```
-
----
-
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE).
+
+---
+
+## Citation
+
+We are currently preparing a manuscript for publication. If you use `rhea-mobo` in your research, please cite the following:
+
+> Islam, M. S., & Sarıtürk, D. (2026). RHEA-MOBO. Zenodo. https://doi.org/10.5281/zenodo.22258223
+
+BibTeX:
+
+```bibtex
+@software{islam_2026_22258223,
+  author    = {Islam, Md. Shafiqul and Sarıtürk, Doğuhan},
+  title     = {RHEA-MOBO},
+  year      = 2026,
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.22258223},
+  url       = {https://doi.org/10.5281/zenodo.22258223},
+}
+```
