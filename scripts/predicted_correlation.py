@@ -1,3 +1,13 @@
+# /// script
+# requires-python = "==3.12.*"
+# dependencies = [
+#     "matplotlib>=3.8",
+#     "numpy>=1.26",
+#     "pandas>=2",
+#     "scikit-learn>=1.4",
+#     "seaborn>=0.13",
+# ]
+# ///
 """Plot feature-importance and objective-correlation figures from predictions.csv."""
 
 from pathlib import Path

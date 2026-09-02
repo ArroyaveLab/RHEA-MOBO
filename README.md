@@ -28,6 +28,13 @@
 
 ---
 
+## Scripts
+
+- `scripts/bo_script_full.py`: a standalone, monolithic reference implementation of the full BO loop. It isn't part of the installable `rhea-mobo` package: install `tc_python` and `materialsframework[matgl,sqsgen]` manually, then run it with `uv run python scripts/bo_script_full.py`.
+- `scripts/predicted_correlation.py`: plots feature-importance and objective-correlation figures from `data/predictions.csv`. Run it with `uv run scripts/predicted_correlation.py`, no project install needed.
+
+---
+
 ## Installation
 
 Install straight from GitHub with [uv](https://docs.astral.sh/uv/):
