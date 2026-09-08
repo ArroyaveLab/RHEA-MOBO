@@ -234,16 +234,26 @@ def objective(x: torch.Tensor) -> torch.Tensor:
 
     try:
         # --- Objective 3: Crack Susceptibility ---
+        # Manuscript: liquid-to-primary-BCC solidification, starting at 4000 K.
+        # Keep LIQUID and the matrix phase; exclude the B2 precipitate set here.
         with TCPython() as session:
             session.disable_caching()
             active_el = ["Mo", "Nb", "Ta", "W", "Co", "Hf"]
             crack_calc = (
                 session.select_database_and_elements("TCHEA7", active_el)
+                .without_default_phases()
+                .select_phase("LIQUID")
+                .select_phase("BCC_B2#1")
                 .get_system()
                 .with_property_model_calculation("Crack Susceptibility Coefficient")
                 .set_temperature(1300 + 273.15)
                 .set_composition_unit(CompositionUnit.MOLE_FRACTION)
-                .set_argument("Start temperature", 4500)
+                .set_argument("Start temperature", 4000)
+                .set_argument("CSC Model", "Clyne and Davies")
+                .set_argument("Scheil calculation type", "Classic")
+                .set_argument("Liquid fraction for start of relaxation", 0.6)
+                .set_argument("Liquid fraction for start of vulnerability", 0.1)
+                .set_argument("Liquid fraction smallest for vulnerability", 0.01)
                 .set_composition("Mo", x[:, 0])
                 .set_composition("Nb", x[:, 1])
                 .set_composition("Ta", x[:, 2])
