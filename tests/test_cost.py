@@ -1,4 +1,4 @@
-"""Tests for the elemental cost model and cost-aware acquisition wrapper."""
+"""Tests for the elemental supply-risk model and supply-risk-aware acquisition wrapper."""
 
 from typing import cast
 
@@ -26,12 +26,12 @@ class _ConstantAcqf(AcquisitionFunction):
 def test_cost_model_matches_manual_dot_product() -> None:
     """cost_model should match a manual dot product against ELEMENT_COST."""
     x = torch.tensor([[0.2, 0.2, 0.2, 0.2, 0.1, 0.1]], dtype=torch.double)
-    expected = (x @ ELEMENT_COST).unsqueeze(-1)
+    expected = (x @ ELEMENT_COST).squeeze(-1)
     assert torch.allclose(cost_model(x), expected)
 
 
 def test_cost_aware_ehvi_divides_base_value_by_cost() -> None:
-    """forward() should return the base acquisition value divided by the predicted cost."""
+    """forward() should return the base acquisition value divided by the supply risk."""
     base = _ConstantAcqf(model=cast("Model", None), value=10.0)
     acqf = CostAwareEHVI(base_acqf=base, cost_model=lambda X: torch.full((X.shape[0],), 2.0, dtype=torch.double))
 
@@ -41,7 +41,7 @@ def test_cost_aware_ehvi_divides_base_value_by_cost() -> None:
 
 
 def test_cost_aware_ehvi_clamps_cost_to_avoid_division_by_zero() -> None:
-    """forward() should clamp near-zero predicted cost to 1e-6 before dividing."""
+    """forward() should clamp near-zero supply risk to 1e-6 before dividing."""
     base = _ConstantAcqf(model=cast("Model", None), value=1.0)
     acqf = CostAwareEHVI(base_acqf=base, cost_model=lambda X: torch.zeros(X.shape[0], dtype=torch.double))
 

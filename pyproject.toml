@@ -1,7 +1,7 @@
 [project]
 name = "rhea-mobo"
 version = "0.1.0"
-description = "Cost-aware multi-objective Bayesian optimization for composition design of refractory high-entropy alloys (RHEAs)."
+description = "Supply-risk-aware multi-objective Bayesian optimization for composition design of refractory high-entropy alloys (RHEAs)."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = "==3.12.*"

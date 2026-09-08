@@ -1,4 +1,4 @@
-"""Main cost-aware multi-objective Bayesian optimization loop."""
+"""Main supply-risk-aware multi-objective Bayesian optimization loop."""
 
 import torch
 from botorch.utils.multi_objective.hypervolume import Hypervolume
@@ -23,10 +23,10 @@ elastic_analyzer = CubicElasticConstantsAnalyzer()
 def run_optimization(
     num_queries: int, init_points: int
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Run cost-aware EHVI Bayesian optimization over the feasible composition grid.
+    """Run supply-risk-aware EHVI Bayesian optimization over the feasible composition grid.
 
     Seeds training data from an evenly spaced subset of the feasible grid, then
-    iteratively fits a GP per objective, proposes a candidate via cost-weighted
+    iteratively fits a GP per objective, proposes a candidate via supply-risk-weighted
     EHVI local search, rejects it if it fails a predicted-ductility check or
     yields a NaN objective, and otherwise adds it to the training set.
 
@@ -56,7 +56,7 @@ def run_optimization(
     ref_point = torch.tensor([0, 15, -3.5, -3.5, 15], dtype=torch.double)
     hypervolumes = []
 
-    pbar = tqdm(total=num_queries, desc="Cost-aware EHVI Optimization")
+    pbar = tqdm(total=num_queries, desc="Supply-risk-aware EHVI Optimization")
 
     while pbar.n < num_queries:
         model = build_model(train_x, train_y)
@@ -83,7 +83,7 @@ def run_optimization(
 
         # === Apply Ductility constraint ===
         x_new = candidate[:, :6].numpy()
-        alloy_new = Composition(f"Mo{x_new[:, 0]}Nb{x_new[:, 1]}Ta{x_new[:, 2]}W{x_new[:, 3]}Co{x_new[:, 4]}Hf{x_new[:, 5]}")
+        alloy_new = Composition({element: x_new[0, i].item() for i, element in enumerate(("Mo", "Nb", "Ta", "W", "Co", "Hf"))})
         sqs_res = sqs_generator.generate(composition=alloy_new, crystal_structure="bcc", supercell_size=(10, 10, 10))
         bcc_MoNbTaWCoHf = sqs_res["structure"]
         elas_res = elastic_analyzer.calculate(bcc_MoNbTaWCoHf)

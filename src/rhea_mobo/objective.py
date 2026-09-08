@@ -233,7 +233,7 @@ def objective(x: torch.Tensor) -> torch.Tensor:
         sqs_generator = SqsGenerator()
         elastic_analyzer = CubicElasticConstantsAnalyzer()
 
-        alloy = Composition(f"Mo{x[:, 0]}Nb{x[:, 1]}Ta{x[:, 2]}W{x[:, 3]}Co{x[:, 4]}Hf{x[:, 5]}")
+        alloy = Composition({element: x[0, i].item() for i, element in enumerate(("Mo", "Nb", "Ta", "W", "Co", "Hf"))})
         sqs_res = sqs_generator.generate(composition=alloy, crystal_structure="bcc", supercell_size=(10, 10, 10))
         bcc_MoNbTaWCoHf = sqs_res["structure"]
 

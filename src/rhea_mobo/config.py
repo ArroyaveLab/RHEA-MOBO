@@ -16,4 +16,7 @@ grid_points_per_dim: int = 21
 discrete_choices: list[torch.Tensor] = [torch.linspace(0.0, 1.0, grid_points_per_dim) for _ in range(num_input)]
 
 elements: list[str] = ["Mo", "Nb", "Ta", "W", "Co", "Hf"]
+# Dimensionless elemental supply-risk scores in Mo, Nb, Ta, W, Co, Hf order.
+# Historical identifier retained for compatibility; these are not monetary costs.
+# See README.md, Supply-risk weighting, for provenance and interpretation.
 ELEMENT_COST: torch.Tensor = torch.tensor([6.65, 4.92, 10.94, 10.53, 3.99, 5.95], dtype=torch.double)

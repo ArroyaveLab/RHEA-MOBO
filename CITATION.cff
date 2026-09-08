@@ -7,7 +7,7 @@ license: MIT
 repository-code: "https://github.com/ArroyaveLab/RHEA-MOBO"
 doi: 10.5281/zenodo.22258224
 url: "https://doi.org/10.5281/zenodo.22258224"
-abstract: "Cost-aware multi-objective Bayesian optimization for composition design of refractory high-entropy alloys (RHEAs)."
+abstract: "Supply-risk-aware multi-objective Bayesian optimization for composition design of refractory high-entropy alloys (RHEAs)."
 authors:
   - family-names: "Islam"
     given-names: "Md Shafiqul"

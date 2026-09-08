@@ -42,25 +42,28 @@ grid_points_per_dim = 21
 discrete_choices = [torch.linspace(0.0, 1.0, grid_points_per_dim) for _ in range(num_input)]
 
 elements = ["Mo", "Nb", "Ta", "W", "Co", "Hf"]
+# Dimensionless elemental supply-risk scores in Mo, Nb, Ta, W, Co, Hf order.
+# Historical identifier retained for compatibility; these are not monetary costs.
+# See README.md, Supply-risk weighting, for provenance and interpretation.
 ELEMENT_COST = torch.tensor([6.65, 4.92, 10.94, 10.53, 3.99, 5.95], dtype=torch.double)
 
 
 class CostAwareEHVI(AcquisitionFunction):
-    """Acquisition function that divides a base acquisition value by predicted cost."""
+    """Acquisition function that divides a base acquisition value by supply risk."""
 
     def __init__(self, base_acqf: AcquisitionFunction, cost_model: Callable[[torch.Tensor], torch.Tensor]) -> None:
-        """Store the base acquisition function and the cost model used to scale it."""
+        """Store the base acquisition function and the supply-risk model used to scale it."""
         super().__init__(model=base_acqf.model)
         self.base_acqf = base_acqf
         self.cost_model = cost_model
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
-        """Return the base acquisition value divided by the (clamped) predicted cost."""
+        """Return the base acquisition value divided by the (clamped) supply risk."""
         return self.base_acqf(X) / self.cost_model(X).clamp(min=1e-6)
 
 
 def cost_model(x: torch.Tensor) -> torch.Tensor:
-    """Compute the elemental dollar cost of each composition row in ``x``."""
+    """Compute the mole-fraction-weighted supply-risk index of each composition row in ``x``."""
     return (x @ ELEMENT_COST).squeeze(-1)
 
 
@@ -287,7 +290,7 @@ def objective(x: torch.Tensor) -> torch.Tensor:
         sqs_generator = SqsGenerator()
         elastic_analyzer = CubicElasticConstantsAnalyzer()
 
-        alloy = Composition(f"Mo{x[:, 0]}Nb{x[:, 1]}Ta{x[:, 2]}W{x[:, 3]}Co{x[:, 4]}Hf{x[:, 5]}")
+        alloy = Composition({element: x[0, i].item() for i, element in enumerate(("Mo", "Nb", "Ta", "W", "Co", "Hf"))})
         sqs_res = sqs_generator.generate(composition=alloy, crystal_structure="bcc", supercell_size=(10, 10, 10))
         bcc_MoNbTaWCoHf = sqs_res["structure"]
 
@@ -432,10 +435,10 @@ elastic_analyzer = CubicElasticConstantsAnalyzer()
 def run_optimization(
     num_queries: int, init_points: int
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Run cost-aware EHVI Bayesian optimization over the feasible composition grid.
+    """Run supply-risk-aware EHVI Bayesian optimization over the feasible composition grid.
 
     Seeds training data from an evenly spaced subset of the feasible grid, then
-    iteratively fits a GP per objective, proposes a candidate via cost-weighted
+    iteratively fits a GP per objective, proposes a candidate via supply-risk-weighted
     EHVI local search, rejects it if it fails a predicted-ductility check or
     yields a NaN objective, and otherwise adds it to the training set.
 
@@ -465,7 +468,7 @@ def run_optimization(
     ref_point = torch.tensor([0, 15, -3.5, -3.5, 15], dtype=torch.double)
     hypervolumes = []
 
-    pbar = tqdm(total=num_queries, desc="Cost-aware EHVI Optimization")
+    pbar = tqdm(total=num_queries, desc="Supply-risk-aware EHVI Optimization")
 
     while pbar.n < num_queries:
         model = build_model(train_x, train_y)
@@ -492,7 +495,7 @@ def run_optimization(
 
         # === Apply Ductility constraint ===
         x_new = candidate[:, :6].numpy()
-        alloy_new = Composition(f"Mo{x_new[:, 0]}Nb{x_new[:, 1]}Ta{x_new[:, 2]}W{x_new[:, 3]}Co{x_new[:, 4]}Hf{x_new[:, 5]}")
+        alloy_new = Composition({element: x_new[0, i].item() for i, element in enumerate(("Mo", "Nb", "Ta", "W", "Co", "Hf"))})
         sqs_res = sqs_generator.generate(composition=alloy_new, crystal_structure="bcc", supercell_size=(10, 10, 10))
         bcc_MoNbTaWCoHf = sqs_res["structure"]
         elas_res = elastic_analyzer.calculate(bcc_MoNbTaWCoHf)
@@ -531,7 +534,7 @@ plt.figure(figsize=(8, 5))
 plt.plot(hypervolumes.cpu().numpy(), marker="o")
 plt.xlabel("Iteration")
 plt.ylabel("Hypervolume")
-plt.title("Cost-aware EHVI Optimization")
+plt.title("Supply-risk-aware EHVI Optimization")
 plt.grid(True)
 plt.tight_layout()
 plt.show()
