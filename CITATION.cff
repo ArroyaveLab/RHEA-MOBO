@@ -1,12 +1,12 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: rhea-mobo
-version: 0.1.0
-date-released: "2026-09-02"
+version: 0.1.2
+date-released: "2026-09-08"
 license: MIT
-repository-code: "https://github.com/ArroyaveLab/RHEA-MOBO"
-doi: 10.5281/zenodo.22258224
-url: "https://doi.org/10.5281/zenodo.22258224"
+repository-code: "https://github.com/ArroyaveLab/2026-islam-rhea-mobo"
+doi: 10.5281/zenodo.22258223
+url: "https://doi.org/10.5281/zenodo.22258223"
 abstract: "Supply-risk-aware multi-objective Bayesian optimization for composition design of refractory high-entropy alloys (RHEAs)."
 authors:
   - family-names: "Islam"

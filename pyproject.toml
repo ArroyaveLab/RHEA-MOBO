@@ -1,6 +1,6 @@
 [project]
 name = "rhea-mobo"
-version = "0.1.0"
+version = "0.1.2"
 description = "Supply-risk-aware multi-objective Bayesian optimization for composition design of refractory high-entropy alloys (RHEAs)."
 readme = "README.md"
 license = { text = "MIT" }
@@ -36,9 +36,9 @@ requires = ["uv_build>=0.11.7,<0.13"]
 build-backend = "uv_build"
 
 [project.urls]
-Home-page = "https://github.com/ArroyaveLab/RHEA-MOBO/"
-Issues = "https://github.com/ArroyaveLab/RHEA-MOBO/issues"
-Repository = "https://github.com/ArroyaveLab/RHEA-MOBO.git"
+Home-page = "https://github.com/ArroyaveLab/2026-islam-rhea-mobo/"
+Issues = "https://github.com/ArroyaveLab/2026-islam-rhea-mobo/issues"
+Repository = "https://github.com/ArroyaveLab/2026-islam-rhea-mobo.git"
 
 [project.scripts]
 rhea-mobo = "rhea_mobo.main:main"

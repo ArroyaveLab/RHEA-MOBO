@@ -5,8 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 
-[![Tests](https://github.com/ArroyaveLab/RHEA-MOBO/actions/workflows/tests.yml/badge.svg)](https://github.com/ArroyaveLab/RHEA-MOBO/actions/workflows/tests.yml)
-[![Lint](https://github.com/ArroyaveLab/RHEA-MOBO/actions/workflows/lint.yml/badge.svg)](https://github.com/ArroyaveLab/RHEA-MOBO/actions/workflows/lint.yml)
+[![Tests](https://github.com/ArroyaveLab/2026-islam-rhea-mobo/actions/workflows/tests.yml/badge.svg)](https://github.com/ArroyaveLab/2026-islam-rhea-mobo/actions/workflows/tests.yml)
+[![Lint](https://github.com/ArroyaveLab/2026-islam-rhea-mobo/actions/workflows/lint.yml/badge.svg)](https://github.com/ArroyaveLab/2026-islam-rhea-mobo/actions/workflows/lint.yml)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22258223.svg)](https://doi.org/10.5281/zenodo.22258223)
 
@@ -15,6 +15,19 @@
 </div>
 
 ---
+
+## Associated paper
+
+**Bayesian Multi-Objective Co-Optimization of Performance and Manufacturability
+in BCC–B2 Refractory High Entropy Alloys**, Md Shafiqul Islam et al. (2026).
+
+[Paper, PDF, and BibTeX](https://github.com/ArroyaveLab/publications/tree/main/papers/2026-islam-rhea-mobo)
+
+This repository was renamed from `ArroyaveLab/RHEA-MOBO` to
+`ArroyaveLab/2026-islam-rhea-mobo` to follow the group's
+`YYYY-leadauthor-shortkeyword` publication naming convention. The Python package
+and command remain `rhea-mobo`; existing GitHub repository links redirect here.
+The manuscript and the software have separate citation and reuse terms.
 
 ## Key features
 
@@ -189,13 +202,13 @@ short default exercise.
 Install straight from GitHub with [uv](https://docs.astral.sh/uv/):
 
 ```sh
-uv add git+https://github.com/ArroyaveLab/RHEA-MOBO.git
+uv add git+https://github.com/ArroyaveLab/2026-islam-rhea-mobo.git
 ```
 
 or with `pip`:
 
 ```sh
-pip install git+https://github.com/ArroyaveLab/RHEA-MOBO.git
+pip install git+https://github.com/ArroyaveLab/2026-islam-rhea-mobo.git
 ```
 
 `tc_python` is not managed by PyPI. It ships with a licensed Thermo-Calc installation and cannot be redistributed, so install it into your environment manually after the above.
@@ -210,7 +223,13 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE).
 
 ## Citation
 
-We are currently preparing a manuscript for publication. If you use `rhea-mobo` in your research, please cite the following:
+The accompanying manuscript is prepared for resubmission to *Materials & Design*
+following transfer from *Acta Materialia*. It does not yet have a journal DOI.
+See the [publication entry](https://github.com/ArroyaveLab/publications/tree/main/papers/2026-islam-rhea-mobo)
+for the manuscript PDF, full author list, abstract, and paper BibTeX.
+
+The DOI below identifies all versions of the software archive, not the article.
+If you use `rhea-mobo`, please cite the software:
 
 > Islam, M. S., & Sarıtürk, D. (2026). RHEA-MOBO. Zenodo. https://doi.org/10.5281/zenodo.22258223
 
