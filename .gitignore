@@ -114,3 +114,7 @@ cython_debug/
 *.tcu
 tc_python_service.log
 *.png
+
+# Local synthetic benchmark environment and outputs
+.venv-toy/
+toy-output/
