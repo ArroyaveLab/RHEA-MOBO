@@ -61,7 +61,7 @@ class CostAwareEHVI(AcquisitionFunction):
 
 def cost_model(x: torch.Tensor) -> torch.Tensor:
     """Compute the elemental dollar cost of each composition row in ``x``."""
-    return (x @ ELEMENT_COST).unsqueeze(-1)
+    return (x @ ELEMENT_COST).squeeze(-1)
 
 
 def objective(x: torch.Tensor) -> torch.Tensor:
