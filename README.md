@@ -28,6 +28,29 @@
 
 ---
 
+## Data availability and reproducibility
+
+**The original per-composition objective evaluations and sequential evaluation
+history from the reported Bayesian-optimization campaign are unavailable.**
+The original run used 50 initial compositions and 200 accepted sequential
+additions. This repository does not contain an archive of those 250 evaluations,
+their selection order, or the corresponding iteration-by-iteration model states.
+
+`data/predictions.csv` contains a property-prediction table for 1,716 candidate
+compositions. It is not the original evaluation log and cannot be used to
+reconstruct which compositions were evaluated at each iteration or the exact
+hypervolume trajectory reported in the paper.
+
+The code is provided to make the computational workflow available for inspection,
+reuse, and new optimization campaigns. It is not an exact replay package for the
+reported run. No fixed random seed was set in the original notebook calculation;
+rerunning the workflow is therefore not expected to reproduce the same selection
+sequence or identical final non-dominated set. Setting a seed for a new run cannot
+recover the unavailable original history. Reproduction of broader trends must be
+assessed through new calculations rather than assumed from the supplied code.
+
+---
+
 ## Supply-risk weighting
 
 The acquisition weighting represents **elemental supply risk**, not purchase price
